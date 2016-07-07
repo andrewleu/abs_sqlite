@@ -1,134 +1,165 @@
-import web
-import os
-import string
-import base64
-import sys
-import random
-from Crypto.Cipher import AES
-import urllib, urllib2
-import sqlite3
-from datetime import datetime
+# -*- coding: utf-8 -*-
+
 import time
 import telnetlib
-
+import sqlite3
+import web
+import abs_bd_sqlite
+import os
 from web import form
-
-reload(sys)
-sys.setdefaultencoding("utf8")
-tel = ' '
+render=abs_bd_sqlite.render
+class res(object):
 
 
-def refresh_page(note, count, cookie, display_content):
-    global ses_cur
-    refresh = 0
-    values = {0: display_content,
-              1: "播放文件" + display_content[0] + "，需要带宽" + display_content[2],
-              2: "设定带宽" + display_content,
-              3: ""}
-    # displayed content after the h1
-    if count >= 4:
-        count = 0
-        refresh = 1
-    else:
-        extra_content = values[count]
-        count += 1
-    ses_cur.execute("update session set count=%d where cookie='%s'" % count, cookie)
-    # update the session
-    if refresh == 0:  # to display the video does not need yielding the following
-        yield '<!Doctype html> <html xmlns=http://www.w3.org/1999/xhtml> \
-         <head> \
-         <meta http-equiv=Content-Type content="text/html;charset=utf-8">\
-         </head> <body> <h1>'
-        yield note + '</h1> <p>'
-        yield extra_content
-        yield '</p><script language="JavaScript">function myrefresh(){   window.location.reload();}'
-        yield "setTimeout('myrefresh()',2000); \
-          </script> </body> </html>"
+  def __init__(self):
+        dbs = abs_bd_sqlite.return_db()
+        c = sqlite3.connect(":memory:", check_same_thread=False)
+        s = sqlite3.connect(":memory:", check_same_thread=False)
+        a = c;
+        b = s
+        c = dbs[0];
+        s = dbs[1];
+        a.close();
+        b.close()
+
+        self.cur_tab = c.cursor();
+        self.ses_cur = s.cursor()
+        """
+        self.tel = telnetlib.Telnet('192.168.0.1', 23, 60)
+        self.tel.set_debuglevel(2)
+        self.tel.read_until('Password:');  # h3c switch
+        self.tel.write('bstar' + '\n');  # password
+        self.tel.read_until('>')
+        self.tel.write('system' + '\n');  # configuration mode
+        self.tel.read_until(']')
+        self.tel.write('interface GigabitEthernet 1/0/25' + '\n')
+        self.tel.read_until(']')
+        self.tel.write('qos lr outbound cir 10240' + '\n');
+        self.tel.read_until(']')
+        self.tel.write('quit' + '\n');"""
+        # self.tel.write('disp this'+'\n') #default bandwith is 1M
+        # print self.tel.read_all()
+
+  def printline(self,info):
+      print info
+      refresh = 0
+      count = info[0];
+      cookie = info[1]
+      # displayed content after the h1
+      if count >= 4:
+          count = 0
+          refresh = 1
+      else:
+          count += 1
+      self.ses_cur.execute("update session set count=%d where cookie='%s'" % (count, cookie))
+      self.ses_cur.close()
+      self.cur_tab.close()
+      yield "end"
+      # update the session
+       # to display the video does not need yielding the following
+      if refresh==0:
+         yield '<!Doctype html> <html xmlns=http://www.w3.org/1999/xhtml> \
+           <head> \
+           <meta http-equiv=Content-Type content="text/html;charset=utf-8">\
+           </head> <body> <h1>'
+         yield info[2] + '</h1> <p>'
+         yield info[3]
+         yield '</p><script language="JavaScript">function myrefresh(){   window.location.reload();}'
+         yield "setTimeout('myrefresh()',2000); \
+             </script> </body> </html>"
 
 
-def __init__(self):
-    self.tel = telnetlib.Telnet('192.168.0.1', 23, 60)
-    self.tel.set_debuglevel(2)
-    self.tel.read_until('Password:');  # h3c switch
-    self.tel.write('bstar' + '\n');  # password
-    self.tel.read_until('>')
-    self.tel.write('system' + '\n');  # configuration mode
-    self.tel.read_until(']')
-    self.tel.write('interface GigabitEthernet 1/0/25' + '\n')
-    self.tel.read_until(']')
-    self.tel.write('qos lr outbound cir 10240' + '\n');
-    self.tel.read_until(']')
-    self.tel.write('quit' + '\n');
-    # self.tel.write('disp this'+'\n') #default bandwith is 1M
-    # print self.tel.read_all()
+  def GET(self, name):
+        global cur_tab
+        global ses_cur
+        BUF = 65535
+        # print query
+        name = name.split("&")
+        cookie = web.cookies().get('webpy_session_id');
+        print "cookie:", cookie  # get the cookie
+        timestamp = long(time.time())
+        self.ses_cur.execute("select count from session where cookie='%s'" % cookie)
+        q = self.ses_cur.fetchone(); print q
+        if q is None:  # new cookie
+            self.ses_cur.execute("insert into session(cookie, timestamp) values('%s',%d)" % (cookie, timestamp))
+            count = 0
+        else :
+            count=q[0]
+        #self.ses_cur.execute("select * from session");
+        #print self.ses_cur.fetchall()
+        if len(name) == 2:  # check the data base for the file
+            query = 1
+            self.cur_tab.execute(
+                "select filename,mediatype,bandwith from filelist where rand='%s' and encryptstr='%s'" % (
+                    name[0], name[1]))
+            result = self.cur_tab.fetchone();
+            print result
+        else:
+            query = 0
 
+        if query != 0:
+            print count
+            information = {
+                0:  [ u"传送标签",name[0] + "&" + name[1]],
+                1:  [u"选择文件",result[0]],
+                2:  [u"设定带宽",result[2]],
+                3:  [u"开始播放", ''],
+                4:  ["",""]
+                } [count%5]
+            print information;
+            count +=1
+            self.ses_cur.execute("update session set count=%d where cookie='%s'" % (count, cookie))
+            self.ses_cur.close()
+            self.cur_tab.close()
 
-def GET(self, name):
-    global cur_tab
-    global ses_cur
-    BUF = 65535
-    # print query
-    name = name.split("&")
-    cookie = web.cookies().get('webpy_session_id');  # get the cookie
-    timestamp = long(time.time())
-    ses_cur.execute("select count from session where cookie=‘%s'" % cookie)
-    count = ses_cur.fetchone()
-    if count is None:  # new cookie
-        ses_cur.execute("insert into session(cookie, timestamp) values('%s',%d)" % cookie, timestamp)
-        count = 0
+            # update the session
+            # to display the video does not need yielding the following
+            if count%5 != 0:
+                yield '<!Doctype html> <html xmlns=http://www.w3.org/1999/xhtml> \
+                <head> \
+                <meta http-equiv=Content-Type content="text/html;charset=utf-8">\
+                </head> <body> <h1>'
+                yield information[0] + '</h1> <p>'
+                yield information[1]
+                yield '</p><script language="JavaScript">function myrefresh(){   window.location.reload();}'
+                yield "setTimeout('myrefresh()',2000); \
+                 </script> </body> </html>"
+            #self.refreshpage(information)
 
-    if len(name) == 2:  # check the data base for the file
-        query = cur_tab.execute(
-            "select filename,mediatype,bandwith from filelist where rand='%s' and encryptstr='%s'" % (
-                name[0], name[1]))
-        result = cur_tab.fetchone()
-    else:
-        query = 0
-    if query != 0:
-        try:
-            {
-                0: lambda: refresh_page('读取标记:', 0, cookie, name[0] + '&' + name[1]),
-                1: lambda: refresh_page('解析标记:', 1, cookie, result),
-                2: lambda: refresh_page('设定带宽:', 2, cookie, result[2]),
-                3: lambda: refresh_page('开始播放:', 3, cookie, '')
-            }[count]()
-        except KeyError:
-            refresh_page('读取标记: ', 0, cookie, name[0] + '&' + name[1] )
+        if query != 0:
+            bd = result[2];
+            print bd
+            """
+            if bd == '40M':
+                self.tel.write('interface GigabitEthernet 1/0/25' + '\n')
+                self.tel.read_until(']')
+                self.tel.write('qos lr outbound cir 40960' + '\n');
+                self.tel.read_until(']')
+                self.tel.write('quit' + '\n');
+                self.tel.close() """
+            filename = result[0]
+            filepath = os.path.join('/opt', filename);
+            print filepath;  # for windows,
+            web.header('Content-Type', result[1])
+            web.header('Transfer-Encoding', 'chunked')
+            f = open(filepath, 'r');
+            # cur_tab.execute("commit")
+            # cur_tab.close()
+            while True:
+                c = f.read(BUF)
+                if c:
+                    yield c
+                else:
+                    break
+            f.close();
+            raise web.seeother("/")
+        else:
+            # cur_tab.execute("commit")
+            f = abs_bd_sqlite.okform()
+            yield render.warning("Warning", "<p>URL parsing error.</p>", f)
 
-    if query != 0:
-        bd = result[2];
-        print bd
-        if bd == '40M':
-            self.tel.write('interface GigabitEthernet 1/0/25' + '\n')
-            self.tel.read_until(']')
-            self.tel.write('qos lr outbound cir 40960' + '\n');
-            self.tel.read_until(']')
-            self.tel.write('quit' + '\n');
-        self.tel.close()
-        filename = result[0]
-        filepath = os.path.join('/opt', filename);
-        print filepath;  # for windows,
-        web.header('Content-Type', result[1])
-        web.header('Transfer-Encoding', 'chunked')
-        f = open(filepath, 'r');
-        # cur_tab.execute("commit")
-        # cur_tab.close()
-        while True:
-            c = f.read(BUF)
-            if c:
-                yield c
-            else:
-                break
-        f.close();
+  def POST(self, path):
         raise web.seeother("/")
-    else:
-        # cur_tab.execute("commit")
-        f = okform()
-        yield render.warning("Warning", "<p>URL parsing error.</p>", f)
-
-
-def POST(self, path):
-    raise web.seeother("/")
 
 
 '''
@@ -145,8 +176,10 @@ ses_cur.execute('Create  TABLE session ( \
   cookie varchar(32) PRIMARY KEY \
   ) ;')
 '''
+web.config.debug = False
 if __name__ == "__main__":
     app = web.application(urls, globals())
+    session = web.session.Session(app, web.session.DiskStore('webpy.sessions'), initializer={'count': 0})
     try:
         app.run()
     except KeyboardInterrupt:

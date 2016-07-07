@@ -25,20 +25,21 @@ if __name__ == "__main__":
     finally :
       exit(0)
 
-def refresh_page(note, count, cookie):
-    global ses_cur
-    yield '<!Doctype html> <html xmlns=http://www.w3.org/1999/xhtml> \
-         <head> \
-         <meta http-equiv=Content-Type content="text/html;charset=utf-8">\
-         </head> <body> <h1>'
-    yield note+'</h1>'
-    yield  '<script language="JavaScript">function myrefresh(){   window.location.reload();}'
-    yield  "setTimeout('myrefresh()',2000); \
-          </script> </body>\
-          </html>"
+
 count=0
 class index:
     def GET(self):
         global count
-        count += 1; cnt=str(count);
-        return  refresh_page('Refreshhing', cnt, 'aabbccdd')
+        count += 1; cnt=str(count); a=('Refreshing', cnt, 'aabbccdd')
+        return  self.refresh_page(a)
+    def refresh_page(self,*a):
+       global ses_cur
+       yield '<!Doctype html> <html xmlns=http://www.w3.org/1999/xhtml> \
+         <head> \
+         <meta http-equiv=Content-Type content="text/html;charset=utf-8">\
+         </head> <body> <h1>'
+       yield a[0]+ ' ' +a[1] +'</h1>'
+       yield  '<script language="JavaScript">function myrefresh(){   window.location.reload();}'
+       yield  "setTimeout('myrefresh()',2000); \
+          </script> </body>\
+          </html>"
