@@ -222,16 +222,18 @@ class poor:
          #   yield c
        else :
           break
-
-tabl=open_database('abs.db3');
-cur_tab=tabl.cursor()
-sessiondb=open_database(':memory:')
-ses_cur=sessiondb.cursor()
-ses_cur.execute('Create  TABLE session ( \
-timestamp long, \
-count int(2) DEFAULT 0, \
-cookie varchar(32) PRIMARY KEY \
-) ;')
+if __name__ != '__main__':
+   tabl=open_database('abs.db3');
+   cur_tab=tabl.cursor()
+   sessiondb=open_database(':memory:')
+   ses_cur=sessiondb.cursor()
+   print "ses_cur:" + str(ses_cur)
+   print "cur_tab:"+ str(cur_tab)
+   ses_cur.execute('Create  TABLE session ( \
+    timestamp long, \
+    count int(2) DEFAULT 0, \
+    cookie varchar(32) PRIMARY KEY \
+   ) ;')
 urls= (
  "/", "index",
  "/res/(.+)", "res.res",

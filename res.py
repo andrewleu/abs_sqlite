@@ -9,8 +9,6 @@ import os
 from web import form
 render=abs_bd_sqlite.render
 class res(object):
-
-
   def __init__(self):
       """
         dbs = abs_bd_sqlite.return_db()
@@ -23,9 +21,9 @@ class res(object):
         a.close();
         b.close()
         """
-
-      self.cur_tab = abs_bd_sqlite.cur_tab();
-      self.ses_cur = abs_bd_sqlite.ses_cur()
+      self.cur_tab = abs_bd_sqlite.cur_tab; print "cur-tab:"+ str(self.cur_tab)
+      self.ses_cur = abs_bd_sqlite.ses_cur; print "ses-cur:"+ str(self.ses_cur)
+      """
       self.tel = telnetlib.Telnet('192.168.0.1', 23, 60)
       self.tel.set_debuglevel(2)
       self.tel.read_until('Password:');  # h3c switch
@@ -40,39 +38,9 @@ class res(object):
       self.tel.write('quit' + '\n');
         # self.tel.write('disp this'+'\n') #default bandwith is 1M
         # print self.tel.read_all()
-
-  def printline(self,info):
-      print info
-      refresh = 0
-      count = info[0];
-      cookie = info[1]
-      # displayed content after the h1
-      if count >= 4:
-          count = 0
-          refresh = 1
-      else:
-          count += 1
-      self.ses_cur.execute("update session set count=%d where cookie='%s'" % (count, cookie))
-      self.ses_cur.close()
-      self.cur_tab.close()
-      yield "end"
-      # update the session
-       # to display the video does not need yielding the following
-      if refresh==0:
-         yield '<!Doctype html> <html xmlns=http://www.w3.org/1999/xhtml> \
-           <head> \
-           <meta http-equiv=Content-Type content="text/html;charset=utf-8">\
-           </head> <body> <h1>'
-         yield info[2] + '</h1> <p>'
-         yield info[3]
-         yield '</p><script language="JavaScript">function myrefresh(){   window.location.reload();}'
-         yield "setTimeout('myrefresh()',2000); \
-             </script> </body> </html>"
-
+"""
 
   def GET(self, name):
-        global cur_tab
-        global ses_cur
         BUF = 65535
         # print query
         name = name.split("&")
@@ -102,7 +70,7 @@ class res(object):
             print count
             information = {
                 0:  [ u"传送标签",name[0] + "&" + name[1]],
-                1:  [u"选择文件",result[0]],
+                1:  [u"确定文件",result[0]],
                 2:  [u"设定带宽",result[2]],
                 3:  [u"开始播放", ''],
                 4:  ["",""]
@@ -110,9 +78,6 @@ class res(object):
             print information;
             count +=1
             self.ses_cur.execute("update session set count=%d where cookie='%s'" % (count, cookie))
-            self.ses_cur.close()
-            self.cur_tab.close()
-
             # update the session
             # to display the video does not need yielding the following
             if count%5 != 0:
@@ -137,6 +102,7 @@ class res(object):
                 self.tel.read_until(']')
                 self.tel.write('quit' + '\n');
                 self.tel.close()
+
             filename = result[0]
             filepath = os.path.join('/opt', filename);
             print filepath;  # for windows,
