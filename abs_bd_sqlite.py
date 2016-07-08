@@ -225,8 +225,8 @@ tabl=open_database('abs.db3');
 cur_tab=tabl.cursor()
 sessiondb=open_database(':memory:')
 ses_cur=sessiondb.cursor()
-print "ses_cur:" + str(ses_cur)
-print "cur_tab:"+ str(cur_tab)
+#print "ses_cur:" + str(ses_cur)
+#print "cur_tab:"+ str(cur_tab)
 
 ses_cur.execute('Create  TABLE session ( \
     timestamp long, \
@@ -241,9 +241,10 @@ urls= (
  "/auth", "auth"
  )
 #reslv=res.res(ses_cur, cur_tab)
-
+web.config.debug=False
 if __name__ == "__main__":
     app = web.application(urls, globals())
+    session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'count': 0})
     try:
       app.run()
     except KeyboardInterrupt :

@@ -21,9 +21,8 @@ class res(object):
         a.close();
         b.close()
         """
-      self.cur_tab = abs_bd_sqlite.cur_tab; print "cur-tab:"+ str(self.cur_tab)
-      self.ses_cur = abs_bd_sqlite.ses_cur; print "ses-cur:"+ str(self.ses_cur)
-      """
+      self.cur_tab = abs_bd_sqlite.cur_tab;# print "cur-tab:"+ str(self.cur_tab)
+      self.ses_cur = abs_bd_sqlite.ses_cur;# print "ses-cur:"+ str(self.ses_cur)
       self.tel = telnetlib.Telnet('192.168.0.1', 23, 60)
       self.tel.set_debuglevel(2)
       self.tel.read_until('Password:');  # h3c switch
@@ -38,7 +37,6 @@ class res(object):
       self.tel.write('quit' + '\n');
         # self.tel.write('disp this'+'\n') #default bandwith is 1M
         # print self.tel.read_all()
-"""
 
   def GET(self, name):
         BUF = 65535
@@ -47,15 +45,16 @@ class res(object):
         cookie = web.cookies().get('webpy_session_id');
         print "cookie:", cookie  # get the cookie
         timestamp = long(time.time())
-        self.ses_cur.execute("select count from session where cookie='%s'" % cookie)
-        q = self.ses_cur.fetchone(); print q
+        self.ses_cur.execute("select count from session where cookie='%s' and encryptstr='%s'" % (cookie,name[1]))
+        q = self.ses_cur.fetchone(); 
         if q is None:  # new cookie
             self.ses_cur.execute("insert into session(cookie, timestamp,encryptstr) values('%s',%d,'%s')" % (cookie, timestamp,name[1]))
             count = 0
         else :
             count=q[0]
-        #self.ses_cur.execute("select * from session");
-        #print self.ses_cur.fetchall()
+        self.ses_cur.execute("select * from session");
+        print 'in the database:\n'+str(self.ses_cur.fetchall())
+        print name
         if len(name) == 2:  # check the data base for the file
             query = 1
             self.cur_tab.execute(
@@ -67,7 +66,7 @@ class res(object):
             query = 0
 
         if query != 0:
-            print count
+            print 'count:',count
             information = {
                 0:  [ u"传送标签",name[0] + "&" + name[1]],
                 1:  [u"确定文件",result[0]],
@@ -91,8 +90,7 @@ class res(object):
                 yield "setTimeout('myrefresh()',2000); \
                  </script> </body> </html>"
             #self.refreshpage(information)
-
-        if query != 0:
+        if query != 0 and count%5==0:
             bd = result[2];
             print bd
             if bd == '40M':
@@ -120,6 +118,7 @@ class res(object):
             f.close();
             raise web.seeother("/")
         else:
+          if count%5 == 0 : 
             # cur_tab.execute("commit")
             f = abs_bd_sqlite.okform()
             yield render.warning("Warning", "<p>URL parsing error.</p>", f)
