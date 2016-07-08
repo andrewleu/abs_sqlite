@@ -12,6 +12,7 @@ class res(object):
 
 
   def __init__(self):
+      """
         dbs = abs_bd_sqlite.return_db()
         c = sqlite3.connect(":memory:", check_same_thread=False)
         s = sqlite3.connect(":memory:", check_same_thread=False)
@@ -21,22 +22,22 @@ class res(object):
         s = dbs[1];
         a.close();
         b.close()
-
-        self.cur_tab = c.cursor();
-        self.ses_cur = s.cursor()
         """
-        self.tel = telnetlib.Telnet('192.168.0.1', 23, 60)
-        self.tel.set_debuglevel(2)
-        self.tel.read_until('Password:');  # h3c switch
-        self.tel.write('bstar' + '\n');  # password
-        self.tel.read_until('>')
-        self.tel.write('system' + '\n');  # configuration mode
-        self.tel.read_until(']')
-        self.tel.write('interface GigabitEthernet 1/0/25' + '\n')
-        self.tel.read_until(']')
-        self.tel.write('qos lr outbound cir 10240' + '\n');
-        self.tel.read_until(']')
-        self.tel.write('quit' + '\n');"""
+
+      self.cur_tab = abs_bd_sqlite.cur_tab();
+      self.ses_cur = abs_bd_sqlite.ses_cur()
+      self.tel = telnetlib.Telnet('192.168.0.1', 23, 60)
+      self.tel.set_debuglevel(2)
+      self.tel.read_until('Password:');  # h3c switch
+      self.tel.write('bstar' + '\n');  # password
+      self.tel.read_until('>')
+      self.tel.write('system' + '\n');  # configuration mode
+      self.tel.read_until(']')
+      self.tel.write('interface GigabitEthernet 1/0/25' + '\n')
+      self.tel.read_until(']')
+      self.tel.write('qos lr outbound cir 10240' + '\n');
+      self.tel.read_until(']')
+      self.tel.write('quit' + '\n');
         # self.tel.write('disp this'+'\n') #default bandwith is 1M
         # print self.tel.read_all()
 
@@ -129,14 +130,13 @@ class res(object):
         if query != 0:
             bd = result[2];
             print bd
-            """
             if bd == '40M':
                 self.tel.write('interface GigabitEthernet 1/0/25' + '\n')
                 self.tel.read_until(']')
                 self.tel.write('qos lr outbound cir 40960' + '\n');
                 self.tel.read_until(']')
                 self.tel.write('quit' + '\n');
-                self.tel.close() """
+                self.tel.close()
             filename = result[0]
             filepath = os.path.join('/opt', filename);
             print filepath;  # for windows,

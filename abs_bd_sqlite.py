@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-  
 import web
-import os
 import string
 import base64
 import sys
@@ -12,19 +11,17 @@ from datetime import datetime
 import time
 import telnetlib
 import res
-urls= (
- "/", "index",
- "/res/(.+)", "res",
- "/bgnd/","bg",
- "/poor", "poor",
- "/auth", "auth"
- )
 from web import form
 reload(sys)
 sys.setdefaultencoding("utf8")
+
+def return_db() :
+   return tabl, sessiondb
+
 def open_database(dbname) :
   table=sqlite3.connect(dbname,check_same_thread = False)
   return table
+
 render=web.template.render('templates')
 regform=form.Form(
    form.Textbox("Program", description="片名"),
@@ -191,7 +188,7 @@ class index:
       cur_tab.execute("select rand, encryptstr,name,bandwith from filelist order by bandwith")
       lines=cur_tab.fetchall();#cur_tab.execute("commit");
       print lines
-      #cur_tab.execute('commit');
+      #cur_tab.execute('commit')
       return render.firstpg(lines)
 class poor:
    tel=' '
@@ -235,8 +232,14 @@ timestamp long, \
 count int(2) DEFAULT 0, \
 cookie varchar(32) PRIMARY KEY \
 ) ;')
-
-
+urls= (
+ "/", "index",
+ "/res/(.+)", "res.res",
+ "/bgnd/","bg",
+ "/poor", "poor",
+ "/auth", "auth"
+ )
+#reslv=res.res(ses_cur, cur_tab)
 if __name__ == "__main__":
     app = web.application(urls, globals())
     try:
