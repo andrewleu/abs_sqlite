@@ -50,7 +50,7 @@ class res(object):
         self.ses_cur.execute("select count from session where cookie='%s'" % cookie)
         q = self.ses_cur.fetchone(); print q
         if q is None:  # new cookie
-            self.ses_cur.execute("insert into session(cookie, timestamp) values('%s',%d)" % (cookie, timestamp))
+            self.ses_cur.execute("insert into session(cookie, timestamp,encryptstr) values('%s',%d,'%s')" % (cookie, timestamp,name[1]))
             count = 0
         else :
             count=q[0]
@@ -77,7 +77,7 @@ class res(object):
                 } [count%5]
             print information;
             count +=1
-            self.ses_cur.execute("update session set count=%d where cookie='%s'" % (count, cookie))
+            self.ses_cur.execute("update session set count=%d where cookie='%s' and encryptstr='%s'" % (count, cookie,name[1]))
             # update the session
             # to display the video does not need yielding the following
             if count%5 != 0:

@@ -182,7 +182,6 @@ class bg : #background maintainance
    return render.register(content,f)
 
 class index:
-    
     def GET(self):
       global cur_tab
       cur_tab.execute("select rand, encryptstr,name,bandwith from filelist order by bandwith")
@@ -222,18 +221,18 @@ class poor:
          #   yield c
        else :
           break
-if __name__ != '__main__':
-   tabl=open_database('abs.db3');
-   cur_tab=tabl.cursor()
-   sessiondb=open_database(':memory:')
-   ses_cur=sessiondb.cursor()
-   print "ses_cur:" + str(ses_cur)
-   print "cur_tab:"+ str(cur_tab)
-   ses_cur.execute('Create  TABLE session ( \
+tabl=open_database('abs.db3');
+cur_tab=tabl.cursor()
+sessiondb=open_database(':memory:')
+ses_cur=sessiondb.cursor()
+print "ses_cur:" + str(ses_cur)
+print "cur_tab:"+ str(cur_tab)
+
+ses_cur.execute('Create  TABLE session ( \
     timestamp long, \
-    count int(2) DEFAULT 0, \
-    cookie varchar(32) PRIMARY KEY \
-   ) ;')
+    count int(4) DEFAULT 0, \
+    cookie varchar(32) , \
+    encryptstr varchar(128), constraint abc primary key (cookie,encryptstr))')
 urls= (
  "/", "index",
  "/res/(.+)", "res.res",
@@ -242,6 +241,7 @@ urls= (
  "/auth", "auth"
  )
 #reslv=res.res(ses_cur, cur_tab)
+
 if __name__ == "__main__":
     app = web.application(urls, globals())
     try:
