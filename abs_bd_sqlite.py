@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-  
 import web
+from mylog import Log 
+#
+#logging module
+#
 import string
 import base64
 import sys
@@ -246,7 +250,8 @@ if __name__ == "__main__":
     app = web.application(urls, globals())
     session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'count': 0})
     try:
-      app.run()
+      app.run(Log)
+      #logging
     except KeyboardInterrupt :
       tabl.close()
       print "exitting"

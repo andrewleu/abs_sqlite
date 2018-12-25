@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from mylog import Log
 import time
 import telnetlib
 import sqlite3
@@ -87,7 +87,7 @@ class res(object):
                 yield information[0] + '</h1> <p>'
                 yield information[1]
                 yield '</p><script language="JavaScript">function myrefresh(){   window.location.reload();}'
-                yield "setTimeout('myrefresh()',2000); \
+                yield "setTimeout('myrefresh()',10000); \
                  </script> </body> </html>"
             #self.refreshpage(information)
         if query != 0 and count%5==0:
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     app = web.application(urls, globals())
     session = web.session.Session(app, web.session.DiskStore('webpy.sessions'), initializer={'count': 0})
     try:
-        app.run()
+        app.run(Log)
     except KeyboardInterrupt:
         tabl.close()
         print "exitting"
